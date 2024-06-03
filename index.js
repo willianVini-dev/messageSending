@@ -75,7 +75,7 @@ app.get('/connected/:session', async (req, res) => {
 });
 
 // Função para iniciar o processo de envio de mensagens via WhatsApp
-async function startWhatsAppProcess(sessionName, message, filename, res) {
+async function startWhatsAppProcess(sessionName, message, filename, image,res) {
   try {
     const client = clients[sessionName];
 
@@ -84,6 +84,13 @@ async function startWhatsAppProcess(sessionName, message, filename, res) {
         .sendText(number, message)
         .catch((error) => {
           console.error('Erro ao enviar mensagem:', error);
+        });
+    }
+    function sendImage(number, imagePath, caption) {
+      client
+        .sendImage(number, imagePath, 'image', caption)
+        .catch((error) => {
+          console.error('Erro ao enviar imagem:', error);
         });
     }
 
@@ -96,8 +103,15 @@ async function startWhatsAppProcess(sessionName, message, filename, res) {
     const data = XLSX.utils.sheet_to_json(worksheet);
 
     data.forEach((contact) => {
+    
       const phoneNumber = `55${contact['Telefone 1']}@c.us`;
-      sendText(phoneNumber, message);
+      // Adicione o caminho da imagem que você deseja enviar
+      if(image){
+        const imagePath = path.join(__dirname, `image/${image}.png`);
+        sendImage(phoneNumber, imagePath, message);
+      }else{
+        sendText(phoneNumber, message);
+      }
     });
 
     res.send('Arquivo e mensagem recebidos com sucesso.');
@@ -120,6 +134,7 @@ async function startWhatsAppProcess(sessionName, message, filename, res) {
 app.post('/upload/:session', upload.single('file'), (req, res) => {
   const sessionName = req.params.session;
   const message = req.body.message;
+  const image = req.body.image;
   const file = req.file;
 
   if (!message || !file) {
@@ -127,7 +142,7 @@ app.post('/upload/:session', upload.single('file'), (req, res) => {
   }
 
   // Iniciar o processo de enviar mensagens após o upload do arquivo
-  startWhatsAppProcess(sessionName, message, req.file.filename, res);
+  startWhatsAppProcess(sessionName, message, req.file.filename,image, res);
 });
 
 // Iniciando o servidor
