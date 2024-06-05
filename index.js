@@ -6,6 +6,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const bodyParser = require('body-parser');
+const cors = require('cors')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -20,6 +21,7 @@ const upload = multer({ storage: storage });
 
 const app = express();
 const port = 3000;
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -142,6 +144,7 @@ app.get('/connected/:session', async (req, res) => {
 // Rota POST que recebe um arquivo XLSX
 app.post('/upload/:session', upload.single('file'), (req, res) => {
   const file = req.file;
+  console.log(req.file);
 
   if (!file) {
     return res.status(400).send('Por favor, forneça um arquivo CSV.');
